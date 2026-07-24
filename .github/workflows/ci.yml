@@ -16,10 +16,10 @@ permissions:
 
 jobs:
   agent:
-    uses: YOUR_GITHUB_USERNAME/ci-agent/.github/workflows/agent.yml@main
+    uses: Komali612/ci-agent/.github/workflows/agent.yml@main
     with:
-      sonar-project-key: YOUR_GITHUB_USERNAME_dotnet-service
-      sonar-organization: YOUR_GITHUB_USERNAME
+      sonar-project-key: komali612_dotnet-service
+      sonar-organization: komali612
       # While bootstrapping (before SonarCloud is configured), uncomment:
       # phases: build,test,push
     secrets: inherit
