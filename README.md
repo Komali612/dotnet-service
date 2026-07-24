@@ -12,3 +12,5 @@ build → test → sonar, and on success pushes `ghcr.io/<owner>/dotnet-service:
 dotnet test                              # build + tests
 dotnet run --project src/DotnetService   # run locally
 ```
+
+CI agent test: first end-to-end run.
