@@ -14,3 +14,5 @@ dotnet run --project src/DotnetService   # run locally
 ```
 
 CI agent test: first end-to-end run.
+
+<!-- pipeline re-verified with credited Anthropic key on 2026-07-24 -->
