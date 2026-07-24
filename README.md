@@ -13,3 +13,5 @@ dotnet test                              # build + tests
 dotnet run --project src/DotnetService   # run locally
 ```
 look for commands above
+
+<!-- LLM pipeline re-verified 2026-07-24 -->
