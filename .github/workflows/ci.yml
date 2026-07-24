@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  pull_request: # "push of PR"
+  workflow_dispatch: # "or manual"
+
+# A force-push cancels the stale run instead of racing the new one.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write # CI Agent pushes the image to GHCR
+  pull-requests: write # CI Agent posts its report comment
+
+jobs:
+  agent:
+    uses: YOUR_GITHUB_USERNAME/ci-agent/.github/workflows/agent.yml@main
+    with:
+      sonar-project-key: YOUR_GITHUB_USERNAME_dotnet-service
+      sonar-organization: YOUR_GITHUB_USERNAME
+      # While bootstrapping (before SonarCloud is configured), uncomment:
+      # phases: build,test,push
+    secrets: inherit
