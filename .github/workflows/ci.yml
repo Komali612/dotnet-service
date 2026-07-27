@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build - restore and compile
+        run: |
+          dotnet restore DotnetService.sln
+          dotnet build DotnetService.sln --configuration Release --no-restore
+
+      - name: Test - run unit tests
+        run: dotnet test DotnetService.sln --configuration Release --no-build --verbosity normal
+
+      - name: Sonar - SonarCloud scan
+        if: ${{ env.SONAR_TOKEN != '' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: SonarSource/sonarcloud-github-action@v3
+
+      - name: Push - write Dockerfile if missing
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        run: |
+          if [ ! -f Dockerfile ]; then
+            cat > Dockerfile <<'EOF'
+          FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+          WORKDIR /src
+          COPY . .
+          RUN dotnet restore DotnetService.sln
+          RUN dotnet publish src/DotnetService/DotnetService.csproj -c Release -o /app/publish
+
+          FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+          WORKDIR /app
+          COPY --from=build /app/publish .
+          ENTRYPOINT ["dotnet", "DotnetService.dll"]
+          EOF
+          fi
+
+      - name: Push - login to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push - build and push Docker image
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
