@@ -59,7 +59,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
     - name: Write default Dockerfile (Push)
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |-
         cat > Dockerfile <<'DOCKERFILE'
         FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -75,14 +75,14 @@ jobs:
         ENTRYPOINT ["dotnet", "app.dll"]
         DOCKERFILE
     - name: Log in to GHCR (Push)
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push image (Push)
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       uses: docker/build-push-action@v6
       with:
         context: .
